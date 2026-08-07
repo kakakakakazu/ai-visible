@@ -1,0 +1,5 @@
+# このサイト自身が診断の見本になるよう、AIクローラーを一切遮断していない
+User-agent: *
+Allow: /
+
+Sitemap: https://kakakakakazu.github.io/ai-visible/sitemap.xml

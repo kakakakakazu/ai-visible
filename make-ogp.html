@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>OGP画像の書き出し</title>
+<style>
+  body{background:#0c0d10;color:#eef0f4;font-family:system-ui,-apple-system,"Hiragino Sans",sans-serif;
+    padding:32px;line-height:1.7}
+  h1{font-size:20px;margin-bottom:8px}
+  p{color:#8b90a0;font-size:14px;margin-bottom:20px}
+  canvas{max-width:100%;border:1px solid #232630;border-radius:12px;display:block;margin-bottom:20px}
+  button{background:#5b8cff;color:#fff;border:0;border-radius:12px;padding:14px 24px;
+    font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+<h1>OGP画像の書き出し</h1>
+<p>下のボタンを押すと <code>ogp.jpg</code> がダウンロードされます。index.html と同じ場所に置いてください。
+このページ自体は配布物の一部ではなく、画像を作り直したいときだけ使います。</p>
+<canvas id="cv" width="1200" height="630"></canvas>
+<button id="save">ogp.jpg をダウンロード</button>
+
+<script>
+"use strict";
+const c = document.getElementById("cv"), x = c.getContext("2d");
+const F  = w => "800 " + w + 'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
+const Fn = w => "600 " + w + 'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
+
+function roundRect(a,b,w,h,r){
+  x.beginPath();
+  x.moveTo(a+r,b); x.lineTo(a+w-r,b); x.quadraticCurveTo(a+w,b,a+w,b+r);
+  x.lineTo(a+w,b+h-r); x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);
+  x.lineTo(a+r,b+h); x.quadraticCurveTo(a,b+h,a,b+h-r);
+  x.lineTo(a,b+r); x.quadraticCurveTo(a,b,a+r,b); x.closePath();
+}
+
+function draw(){
+  const g = x.createLinearGradient(0,0,1200,630);
+  g.addColorStop(0,"#0a0d18"); g.addColorStop(1,"#1a1030");
+  x.fillStyle = g; x.fillRect(0,0,1200,630);
+
+  const orb = x.createRadialGradient(1010,120,0,1010,120,480);
+  orb.addColorStop(0,"rgba(91,140,255,.28)"); orb.addColorStop(1,"rgba(91,140,255,0)");
+  x.fillStyle = orb; x.fillRect(0,0,1200,630);
+
+  x.textAlign = "left";
+  x.fillStyle = "#fff"; x.font = F(78);
+  x.fillText("AIから見えていますか", 72, 190);
+
+  x.fillStyle = "rgba(255,255,255,.62)"; x.font = Fn(30);
+  x.fillText("ChatGPT や Claude から、あなたのサイトの中身が", 72, 262);
+  x.fillText("読めているかを100点満点で診断します。", 72, 308);
+
+  [["68%","検索してもサイトに来ない割合"],
+   ["47.4%","10〜20代のAI検索利用率"],
+   ["0円","運営コスト・API不使用"]].forEach((n,i) => {
+    const cx = 72 + i*360;
+    x.fillStyle = "rgba(255,255,255,.07)";
+    roundRect(cx, 372, 330, 130, 18); x.fill();
+    x.fillStyle = i===2 ? "#22c98a" : "#5b8cff"; x.font = F(52);
+    x.fillText(n[0], cx+26, 432);
+    x.fillStyle = "rgba(255,255,255,.55)"; x.font = Fn(20);
+    x.fillText(n[1], cx+26, 470);
+  });
+
+  x.fillStyle = "rgba(255,255,255,.35)"; x.font = Fn(22);
+  x.fillText("通信ゼロ・すべてブラウザ内で完結", 72, 566);
+}
+
+draw();
+document.getElementById("save").onclick = () => {
+  const a = document.createElement("a");
+  a.href = c.toDataURL("image/jpeg", 0.82);
+  a.download = "ogp.jpg";
+  a.click();
+};
+</script>
+</body>
+</html>

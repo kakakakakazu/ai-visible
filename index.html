@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIから見えていますか — サイトのAI可読性診断</title>
+<meta name="description" content="検索した人の約7割はもうサイトに来ません。ChatGPTやClaudeなどのAIから、あなたのサイトの中身が読めているかを無料で診断します。通信ゼロ・すべてブラウザ内で完結。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AIから見えていますか — サイトのAI可読性診断">
+<meta property="og:description" content="ゼロクリック検索68%の時代。AIがあなたのサイトを読めているかを100点満点で診断し、修正ファイルまで作ります。無料・通信ゼロ。">
+<meta property="og:url" content="https://kakakakakazu.github.io/ai-visible/">
+<meta property="og:image" content="https://kakakakakazu.github.io/ai-visible/ogp.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AIから見えていますか">
+<meta name="twitter:description" content="AIがあなたのサイトを読めているかを100点満点で診断。修正ファイルまで作ります。無料・通信ゼロ。">
+<!-- このツール自身がAI可読性の見本になるよう、診断項目を自分で満たしておく -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "AIから見えていますか",
+  "description": "ChatGPTやClaudeなどのAIから、Webサイトの中身が読めているかを診断し、修正ファイルを生成する無料ツール。全処理をブラウザ内で行い、外部への通信を一切行わない。",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"},
+  "featureList": [
+    "robots.txt によるAIクローラー遮断の検出",
+    "JavaScript依存でAIに本文が見えない状態の検出",
+    "構造化データ（JSON-LD）の検査",
+    "出典・統計の含有量の測定",
+    "llms.txt / robots.txt / JSON-LD の自動生成"
+  ]
+}
+</script>
+<style>
+  :root{
+    --bg:#0c0d10; --fg:#eef0f4; --dim:#8b90a0; --line:#232630; --card:#14161c;
+    --ok:#22c98a; --warn:#ffb020; --ng:#ff5d6c; --acc:#5b8cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;
+    font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.7}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 20px 100px}
+
+  header{padding:40px 0 28px}
+  h1{font-size:clamp(28px,5.5vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .lead{color:var(--dim);margin-top:14px;font-size:15px}
+  .badge{display:inline-block;margin-top:16px;border:1px solid var(--ok);color:var(--ok);
+    border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600}
+
+  .tabs{display:flex;gap:8px;margin-top:28px;border-bottom:1px solid var(--line)}
+  .tab{padding:12px 18px;cursor:pointer;font-size:14px;font-weight:600;color:var(--dim);
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.on{color:var(--fg);border-bottom-color:var(--acc)}
+  .pane{display:none;padding-top:22px}
+  .pane.on{display:block}
+
+  .drop{border:2px dashed var(--line);border-radius:16px;padding:44px 20px;text-align:center;
+    cursor:pointer;transition:.15s;background:var(--card)}
+  .drop:hover,.drop.over{border-color:var(--acc);background:#181b23}
+  .drop b{font-size:17px}
+  .drop span{display:block;color:var(--dim);font-size:13px;margin-top:8px}
+  input[type=file]{display:none}
+
+  textarea{width:100%;height:200px;background:var(--card);color:var(--fg);border:1px solid var(--line);
+    border-radius:14px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12.5px;resize:vertical;line-height:1.6}
+  textarea:focus{outline:none;border-color:var(--acc)}
+
+  .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  input[type=text]{flex:1;min-width:240px;background:var(--card);color:var(--fg);
+    border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;font-family:inherit}
+  input[type=text]:focus{outline:none;border-color:var(--acc)}
+
+  button{border:0;border-radius:12px;padding:14px 22px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:.15s;background:var(--acc);color:#fff}
+  button:hover{filter:brightness(1.12)}
+  button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  button.sm{padding:9px 14px;font-size:12.5px}
+
+  .note{color:var(--dim);font-size:13px;margin-top:14px}
+  .note code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
+    font-size:12px;font-family:ui-monospace,Menlo,monospace}
+
+  .err{display:none;margin-top:16px;border:1px solid var(--ng);color:var(--ng);
+    border-radius:12px;padding:14px 18px;font-size:14px}
+
+  /* results */
+  #out{display:none;margin-top:36px}
+  .score{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px;text-align:center}
+  .score .n{font-size:64px;font-weight:900;letter-spacing:-.03em;line-height:1}
+  .score .n small{font-size:22px;color:var(--dim);font-weight:700}
+  .score .v{font-size:17px;font-weight:700;margin-top:10px}
+  .score .d{color:var(--dim);font-size:13.5px;margin-top:8px}
+
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-top:10px;display:flex;gap:14px;align-items:flex-start}
+  .item .ic{font-size:17px;line-height:1.5;flex-shrink:0}
+  .item .t{font-weight:700;font-size:14.5px}
+  .item .m{color:var(--dim);font-size:13px;margin-top:5px}
+  .item .fix{color:var(--acc);font-size:12.5px;margin-top:8px}
+  .item.ng{border-color:rgba(255,93,108,.4)}
+  .item.warn{border-color:rgba(255,176,32,.3)}
+
+  h2{font-size:16px;margin:34px 0 4px;font-weight:700}
+  .h2sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+
+  pre{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;
+    overflow-x:auto;font-size:12.5px;font-family:ui-monospace,Menlo,monospace;line-height:1.65;
+    white-space:pre;color:#cdd3e0}
+  .gen{margin-top:10px}
+  .genhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}
+  .genhead b{font-size:14px}
+  .genhead span{color:var(--dim);font-size:12px}
+
+  footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--dim);font-size:12.5px}
+  canvas{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>AIから見えていますか</h1>
+  <p class="lead">検索した人の <b style="color:var(--fg)">68%</b> は、もうサイトに来ません。AIが要約して答えて終わりです。
+  10〜20代の <b style="color:var(--fg)">47.4%</b> は最初からAIに聞いています。<br>
+  そのAIから、あなたのサイトの中身が読めているかを、<b style="color:var(--fg)">13種類</b>のAIクローラーと
+  <b style="color:var(--fg)">10項目</b>で診断します。</p>
+  <div class="badge">🔒 通信ゼロ・API不使用・すべてブラウザ内で完結</div>
+  <p class="note">最終更新：<time datetime="2026-08-06">2026年8月6日</time></p>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-p="p1">HTMLファイルを渡す</div>
+  <div class="tab" data-p="p2">ソースを貼る</div>
+  <div class="tab" data-p="p3">ブックマークレット</div>
+</div>
+
+<div class="pane on" id="p1">
+  <div class="drop" id="drop">
+    <b>HTMLファイルをドロップ</b>
+    <span>またはクリックして選択</span>
+  </div>
+  <input type="file" id="file" accept=".html,.htm,text/html">
+  <p class="note">ブラウザで自分のサイトを開き、<code>⌘S</code>（「ページのソース」形式）で保存したファイルを渡してください。</p>
+</div>
+
+<div class="pane" id="p2">
+  <textarea id="src" placeholder="ページのソースを貼り付け（ブラウザで ⌘U → 全選択 → コピー）"></textarea>
+  <div class="row">
+    <input type="text" id="url2" placeholder="そのページのURL（任意・生成物の精度が上がります）">
+    <button id="run2">診断する</button>
+  </div>
+</div>
+
+<div class="pane" id="p3">
+  <p class="note" style="margin-top:0">
+    下のリンクをブックマークバーにドラッグしてください。自分のサイトを開いた状態でクリックすると、
+    <b style="color:var(--fg)">そのページのHTMLと robots.txt / llms.txt / sitemap.xml をまとめてクリップボードにコピー</b>します。
+    あとは「ソースを貼る」タブに貼るだけです。
+  </p>
+  <p style="margin-top:18px"><a id="bmk" href="#" style="display:inline-block;background:var(--acc);color:#fff;
+    padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none;font-size:14px">AI可読性チェック</a></p>
+  <p class="note">同一サイト内のファイルを読むだけなので、外部への通信は発生しません。</p>
+</div>
+
+<div class="err" id="err"></div>
+
+<div id="out">
+  <div class="score">
+    <div class="n" id="sN">—<small>/100</small></div>
+    <div class="v" id="sV">—</div>
+    <div class="d" id="sD">—</div>
+  </div>
+
+  <h2>診断結果</h2>
+  <div class="h2sub">上から順に、AIの読み取りへの影響が大きいものです。</div>
+  <div id="items"></div>
+
+  <h2>そのまま使える修正ファイル</h2>
+  <div class="h2sub">コピーして、サイトに置いてください。</div>
+  <div id="gens"></div>
+
+  <h2>結果を共有する</h2>
+  <div class="h2sub">画像を保存して投稿できます。URLは含まれないので、どのサイトを診断したかは伏せたまま共有できます。</div>
+  <div class="actions">
+    <button class="primary" id="shareImg">結果を画像で保存</button>
+    <button class="ghost" id="shareX">Xに投稿する</button>
+    <button class="ghost" id="shareCopy">結果を文章でコピー</button>
+  </div>
+</div>
+<canvas id="cv" width="1200" height="630"></canvas>
+
+<section id="faq">
+  <h2>よくある質問</h2>
+
+  <h3 style="font-size:14.5px;margin-top:18px">なぜ無料なのですか</h3>
+  <p class="note" style="margin-top:6px">診断に外部サービスを一切使っていないため、運営コストが発生しないからです。
+  AIのAPIを1回も呼ばず、サーバーも持たず、判定はすべて閲覧者のブラウザ内で完結します。</p>
+
+  <h3 style="font-size:14.5px;margin-top:18px">入力したデータはどこに送られますか</h3>
+  <p class="note" style="margin-top:6px">どこにも送られません。通信は発生しません。
+  貼り付けたHTMLはブラウザのメモリ上だけで処理され、ページを閉じた時点で消えます。</p>
+
+  <h3 style="font-size:14.5px;margin-top:18px">点数の配分はどう決めていますか</h3>
+  <p class="note" style="margin-top:6px">重い順に、AIクローラーの許可 28点、本文がHTMLに存在するか 20点、構造化データ 12点、
+  出典の明記 12点、統計・数字 11点です。出典と統計の配点は、
+  <a href="https://dl.acm.org/doi/10.1145/3637528.3671900" style="color:var(--acc)">KDD 2024 で発表されたGEOの査読論文</a>で
+  「出典の明記で可視性が約40%、統計の追加で約37%向上した」という測定結果が出ているためです。</p>
+
+  <h3 style="font-size:14.5px;margin-top:18px">llms.txt は本当に効果がありますか</h3>
+  <p class="note" style="margin-top:6px">現時点では限定的です。AIボットの訪問のうち llms.txt が取得されるのは
+  <b style="color:var(--fg)">0.1%程度</b>という実測があり、GPTBot・ClaudeBot・PerplexityBot は
+  llms.txt を無視して直接HTMLを読む傾向があります。このため配点は1点に留めています。
+  ただし作成コストがほぼゼロなので、置いておく価値はあります。</p>
+
+  <h3 style="font-size:14.5px;margin-top:18px">h1 が無いと減点されますか</h3>
+  <p class="note" style="margin-top:6px">減点しません。実在サイト6件を調べたところ5件が h1 を持っておらず、
+  減点の根拠が薄いと判断したためです。情報としては表示します。</p>
+
+  <h2>まとめ</h2>
+  <p class="note" style="margin-top:6px">AI検索の時代に売上を落とす原因は、多くの場合コンテンツの質ではなく
+  <b style="color:var(--fg)">AIがサイトの中身に到達できていないこと</b>です。
+  robots.txt での遮断と、JavaScript依存による本文の不可視化——この2つで配点の48%を占めます。
+  まずここを確認してください。</p>
+</section>
+
+<footer>
+  判定はすべてこのページ内のJavaScriptで行っています。外部APIもサーバーも使用していません。<br>
+  診断内容は、公開されている各AIクローラーの仕様、<a href="https://schema.org/" style="color:var(--dim);text-decoration:underline">schema.org</a>、
+  <a href="https://llmstxt.org/" style="color:var(--dim);text-decoration:underline">llms.txt 規格</a>、
+  <a href="https://www.rfc-editor.org/rfc/rfc9309.html" style="color:var(--dim);text-decoration:underline">RFC 9309（Robots Exclusion Protocol）</a>
+  に基づく静的解析です。<br>
+  統計の出典：ゼロクリック検索率68%・AI Overviews表示時のクリック38%減（2026年の各種調査）、
+  <a href="https://dl.acm.org/doi/10.1145/3637528.3671900" style="color:var(--dim);text-decoration:underline">GEO: Generative Engine Optimization（KDD 2024）</a>。
+</footer>
+
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ============ AIクローラー一覧 ============
+   robots.txt で弾かれていると、そのAIはサイトの中身を読めない。 */
+const BOTS = [
+  {ua:"GPTBot",             who:"ChatGPT（学習・検索）"},
+  {ua:"OAI-SearchBot",      who:"ChatGPT検索"},
+  {ua:"ChatGPT-User",       who:"ChatGPTのブラウズ"},
+  {ua:"ClaudeBot",          who:"Claude"},
+  {ua:"anthropic-ai",       who:"Claude（旧表記）"},
+  {ua:"Claude-Web",         who:"Claude（旧表記）"},
+  {ua:"PerplexityBot",      who:"Perplexity"},
+  {ua:"Perplexity-User",    who:"Perplexityの閲覧"},
+  {ua:"Google-Extended",    who:"Gemini"},
+  {ua:"Applebot-Extended",  who:"Apple Intelligence"},
+  {ua:"CCBot",              who:"Common Crawl（多くのAIの供給源）"},
+  {ua:"Amazonbot",          who:"Amazon"},
+  {ua:"meta-externalagent", who:"Meta AI"}
+];
+
+/* ============ robots.txt 解析 ============
+   User-agent ブロックごとに Disallow を集め、対象UAが「/」を禁止されているか判定する。
+   * ブロックの指定は、そのUA専用ブロックが無い場合にのみ適用される（RFC 9309 の最長一致に準拠）。 */
+function parseRobots(txt){
+  const groups = [];      // {agents:[], disallow:[], allow:[]}
+  const sitemaps = [];    // Sitemap: ディレクティブ（/sitemap.xml 以外に置く例が多い）
+  let cur = null, lastWasAgent = false;
+
+  for(let raw of txt.split(/\r?\n/)){
+    const line = raw.replace(/#.*$/, "").trim();
+    if(!line) continue;
+    const i = line.indexOf(":");
+    if(i < 0) continue;
+    const key = line.slice(0, i).trim().toLowerCase();
+    const val = line.slice(i + 1).trim();
+
+    if(key === "sitemap"){ if(val) sitemaps.push(val); lastWasAgent = false; continue; }
+
+    if(key === "user-agent"){
+      if(!cur || !lastWasAgent){ cur = {agents:[], disallow:[], allow:[]}; groups.push(cur); }
+      cur.agents.push(val.toLowerCase());
+      lastWasAgent = true;
+    }else if(cur && (key === "disallow" || key === "allow")){
+      cur[key].push(val);
+      lastWasAgent = false;
+    }else{
+      lastWasAgent = false;
+    }
+  }
+
+  // 対象UAがルート配下を全面禁止されているか
+  const blocked = ua => {
+    const u = ua.toLowerCase();
+    const own = groups.filter(g => g.agents.includes(u));
+    const star = groups.filter(g => g.agents.includes("*"));
+    const use = own.length ? own : star;          // 専用ブロックがあれば * は無視
+    if(!use.length) return false;
+    for(const g of use){
+      // Allow: / が明示されていれば許可扱い
+      if(g.allow.some(a => a === "/" )) return false;
+      if(g.disallow.some(d => d === "/")) return true;
+    }
+    return false;
+  };
+  return {groups, blocked, hasAny: groups.length > 0, sitemaps};
+}
+
+/* ============ HTML 解析 ============ */
+function analyze(html, robotsTxt, hasLlms, hasSitemap, url){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const R = parseRobots(robotsTxt || "");
+
+  // 本文テキスト量（script/style/noscript を除いた可視テキスト）
+  const clone = doc.body ? doc.body.cloneNode(true) : null;
+  if(clone) clone.querySelectorAll("script,style,noscript,template").forEach(n => n.remove());
+  const bodyText = clone ? clone.textContent.replace(/\s+/g, " ").trim() : "";
+
+  // JSON-LD
+  const lds = [];
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+    try{ lds.push(JSON.parse(s.textContent)); }catch(e){ lds.push({__broken:true}); }
+  });
+  const ldTypes = [];
+  const collect = o => {
+    if(!o || typeof o !== "object") return;
+    if(Array.isArray(o)){ o.forEach(collect); return; }
+    if(typeof o["@type"] === "string") ldTypes.push(o["@type"]);
+    else if(Array.isArray(o["@type"])) ldTypes.push(...o["@type"]);
+    Object.values(o).forEach(v => { if(v && typeof v === "object") collect(v); });
+  };
+  lds.forEach(collect);
+
+  const title = (doc.querySelector("title")?.textContent || "").trim();
+  const desc  = (doc.querySelector('meta[name="description"]')?.getAttribute("content") || "").trim();
+  const h1s   = [...doc.querySelectorAll("h1")].map(h => h.textContent.trim()).filter(Boolean);
+  const h2s   = [...doc.querySelectorAll("h2")].map(h => h.textContent.trim()).filter(Boolean);
+  const lang  = doc.documentElement.getAttribute("lang") || "";
+  const canon = doc.querySelector('link[rel="canonical"]')?.getAttribute("href") || "";
+  const ogT   = doc.querySelector('meta[property="og:title"]')?.getAttribute("content") || "";
+  const imgs  = [...doc.querySelectorAll("img")];
+  const noAlt = imgs.filter(i => !i.getAttribute("alt")).length;
+
+  // JS依存の判定。本質は「HTMLに本文が無い」ことで、マウント要素は補強材料にすぎない。
+  // note.com のようにフレームワーク既定のIDを持たないSPAもあるため、外部scriptの本数も併用する。
+  const mount = doc.querySelector("#root,#app,#__next,#__nuxt,#___gatsby,#q-app,#svelte,[data-reactroot],[data-server-rendered]");
+  const scriptCount = doc.querySelectorAll("script[src]").length;
+  const spa = bodyText.length < 400 && (!!mount || scriptCount >= 3);
+
+  /* --- ここから下は KDD 2024（GEO提唱論文）の実証にもとづく項目 ---
+     出典の明記 +約40% / 統計の追加 +約37% / 引用の追加 +約22% という測定結果があるため、
+     見出しやメタ情報より、この3つを重く見る。 */
+
+  // 出典: 外部サイトへのリンク（うち一次情報・公的ドメイン）
+  const links = [...doc.querySelectorAll("a[href]")];
+  const host = (() => { try{ return new URL(url).host; }catch(e){ return ""; } })();
+  const extLinks = links.filter(a => {
+    const h = a.getAttribute("href") || "";
+    if(!/^https?:\/\//i.test(h)) return false;
+    try{ return new URL(h).host !== host; }catch(e){ return false; }
+  });
+  // 一次情報とみなすドメイン。日本の公的機関だけでなく、学会・標準化団体・国際機関も含める
+  // （当初は go.jp / ac.jp 中心で、ACM や RFC への出典を取りこぼしていた）。
+  const AUTH = /\.(go|ac|lg)\.jp|\.gov\b|\.edu\b|\.ac\.uk\b|e-stat|wikipedia\.org|doi\.org|arxiv\.org|ncbi\.nlm|pubmed|jstor|acm\.org|ieee\.org|nature\.com|science\.org|sciencedirect|springer|rfc-editor\.org|ietf\.org|w3\.org|whatwg\.org|schema\.org|iso\.org|jisc?\.go\.jp|who\.int|oecd\.org|un\.org|worldbank\.org|imf\.org|europa\.eu/i;
+  const authLinks = extLinks.filter(a => AUTH.test(a.getAttribute("href") || ""));
+
+  // 統計: 本文中の「数値＋単位」の出現数
+  const stats = (bodyText.match(/[0-9０-９][0-9０-９,，.．]*\s*(%|％|円|人|件|社|年|ヶ月|か月|カ月|月|日|時間|分|秒|倍|割|億|万|千|台|個|回|位|点|kg|km|cm|mm|g|m|℃)/g) || []).length;
+
+  // 要約の手がかりになる見出し（LLMはこれを起点に要約する）
+  const heads = [...doc.querySelectorAll("h1,h2,h3,h4")].map(h => h.textContent.trim()).filter(Boolean);
+  const summaryHeads = heads.filter(t =>
+    /まとめ|要約|ポイント|結論|概要|とは|FAQ|よくある(ご)?質問|Q&A|Q＆A|手順|比較|一覧|理由|方法/i.test(t));
+
+  // セマンティック要素（divの海はAIにとってノイズ）
+  const semantic = ["main","article","section","header","footer","nav","aside"].filter(t => doc.querySelector(t));
+  const divCount = doc.querySelectorAll("div").length;
+
+  // 更新日時（鮮度の手がかり）
+  const hasDate = !!(doc.querySelector("time[datetime]")
+    || doc.querySelector('meta[property="article:modified_time"],meta[property="article:published_time"],meta[name="last-modified"],meta[name="date"]')
+    || /"date(Published|Modified)"/.test(html));
+
+  return {
+    R, bodyText, title, desc, h1s, h2s, lang, canon, ogT,
+    ldTypes: [...new Set(ldTypes)], ldBroken: lds.some(l => l.__broken),
+    imgCount: imgs.length, noAlt, spa, hasLlms, url,
+    // sitemap は /sitemap.xml に無くても robots.txt の Sitemap: で示されていれば有る
+    hasSitemap: hasSitemap || R.sitemaps.length > 0,
+    sitemapViaRobots: !hasSitemap && R.sitemaps.length > 0,
+    hasRobots: !!(robotsTxt && robotsTxt.trim()),
+    extLinks: extLinks.length, authLinks: authLinks.length,
+    stats, summaryHeads, heads: heads.length, semantic, divCount, hasDate
+  };
+}
+
+/* ============ 採点 ============ */
+/* 配点の根拠:
+   28+20 は「そもそもAIが中身に到達できるか」。ここが欠けると他は全て無意味になるので最重量。
+   出典12・統計11 は KDD 2024 の GEO 論文の測定値（出典の明記 +約40%、統計の追加 +約37%）に対応。
+   llms.txt を 1 点まで下げたのは「AIボット訪問の0.1%しか取得されない」という実測があるため。
+   h1 の有無は減点対象から外した。実サイト6件中5件が h1 を持たず、減点の根拠が薄いと判断。 */
+function judge(a){
+  const items = [];
+  let score = 0;
+
+  // 1. AIクローラーの許可（28点）— これが閉じていると他は全部無意味
+  const blockedBots = BOTS.filter(b => a.R.blocked(b.ua));
+  if(!a.hasRobots){
+    score += 28;
+    items.push({s:"ok", t:"AIクローラーは弾かれていません", m:"robots.txt が無い・取得できない・AI関連の記述が無いいずれかです。遮断はされていません。", w:28});
+  }else if(blockedBots.length === 0){
+    score += 28;
+    items.push({s:"ok", t:"AIクローラーは弾かれていません", m:"robots.txt を解析しましたが、主要なAIクローラーを全面禁止する記述はありません。", w:28});
+  }else{
+    score += Math.max(0, 28 - blockedBots.length * 4);
+    items.push({s:"ng", t:blockedBots.length + "種類のAIから、サイト全体が見えていません",
+      m:"robots.txt で全面禁止されています → " + blockedBots.map(b => b.who + "（" + b.ua + "）").join(" / "),
+      f:"下の robots.txt 修正案を既存ファイルの先頭に足すと、これらのAIが読めるようになります。", w:28});
+  }
+
+  // 2. 本文がHTMLに入っているか（20点）
+  if(a.spa){
+    items.push({s:"ng", t:"AIには、ほぼ空のページに見えています",
+      m:"HTMLに含まれる本文が " + a.bodyText.length + " 字しかありません。中身をJavaScriptで描画しているためで、多くのAIクローラーはJavaScriptを実行しないため、ページは空同然に見えます。",
+      f:"サーバー側レンダリング（SSR）か静的書き出しが根本解決です。難しい場合は、主要な情報だけでもHTMLに直接書いてください。", w:20});
+  }else if(a.bodyText.length < 300){
+    score += 8;
+    items.push({s:"warn", t:"本文が短すぎます（" + a.bodyText.length + "字）",
+      m:"AIが要約や引用の材料にできる文章が不足しています。", w:20});
+  }else{
+    score += 20;
+    items.push({s:"ok", t:"本文はHTMLに直接入っています（" + a.bodyText.length.toLocaleString() + "字）",
+      m:"JavaScriptを実行しないAIクローラーからも中身が読めます。", w:20});
+  }
+
+  // 3. 構造化データ（12点）— AIが最も確実に解釈できる形式
+  if(a.ldBroken){
+    score += 2;
+    items.push({s:"ng", t:"構造化データが壊れています",
+      m:"JSON-LD がJSONとして解釈できません。書いてあっても丸ごと無視されます。", w:12});
+  }else if(a.ldTypes.length === 0){
+    items.push({s:"ng", t:"構造化データがありません",
+      m:"AIは「これは何の会社か・何の商品か」を文章から推測するしかありません。誤って説明される主因です。",
+      f:"下の JSON-LD をコピーして <head> に貼れば解決します。", w:12});
+  }else{
+    score += 12;
+    items.push({s:"ok", t:"構造化データがあります", m:"検出した型：" + a.ldTypes.join(", "), w:12});
+  }
+
+  // 4. 出典（12点）— KDD 2024: 出典の明記で可視性 +約40%
+  if(a.spa){
+    items.push({s:"warn", t:"出典の有無を判定できません", m:"本文がHTMLに含まれていないため、測定できませんでした。", w:0});
+  }else if(a.authLinks > 0){
+    score += 12;
+    items.push({s:"ok", t:"一次情報・公的な出典にリンクしています（" + a.authLinks + "本）",
+      m:"出典の明記は、AI検索での可視性を約40%高めるという測定結果があります（KDD 2024）。", w:12});
+  }else if(a.extLinks >= 3){
+    score += 7;
+    items.push({s:"warn", t:"外部リンクはありますが、一次情報への出典がありません（外部 " + a.extLinks + "本）",
+      m:"官公庁（go.jp）・学術（ac.jp / doi.org / arXiv）・統計（e-Stat）など、検証可能な出典を1本足すだけで扱いが変わります。", w:12});
+  }else{
+    items.push({s:"ng", t:"出典がありません（外部リンク " + a.extLinks + "本）",
+      m:"AIは裏の取れない記述を避けます。出典の明記は可視性を約40%高めるという測定結果があり（KDD 2024）、今回の項目では最も費用対効果が高い改善です。",
+      f:"主張の根拠になる統計や公的資料へのリンクを、本文中に置いてください。", w:12});
+  }
+
+  // 5. 統計・数字（11点）— KDD 2024: 統計の追加で +約37%
+  if(a.spa){
+    items.push({s:"warn", t:"数字の有無を判定できません", m:"本文がHTMLに無いため、統計の含有を測れませんでした。", w:0});
+  }else if(a.stats >= 15){
+    score += 11;
+    items.push({s:"ok", t:"具体的な数字が豊富です（" + a.stats + "箇所）",
+      m:"統計や数値の記載は、AI検索での可視性を約37%高めるという測定結果があります（KDD 2024）。", w:11});
+  }else if(a.stats >= 5){
+    score += 7;
+    items.push({s:"warn", t:"数字がやや少なめです（" + a.stats + "箇所）",
+      m:"「多くの」「豊富な」といった形容を、実際の件数・年数・割合に置き換えるとAIに拾われやすくなります。", w:11});
+  }else{
+    items.push({s:"ng", t:"具体的な数字がほとんどありません（" + a.stats + "箇所）",
+      m:"AIは検証できる数値を含む記述を優先して引用します。統計の追加で可視性が約37%向上したという測定があります（KDD 2024）。",
+      f:"創業年・実績件数・対応エリア数・価格など、持っている数字を本文に書いてください。", w:11});
+  }
+
+  // 6. タイトルと説明（7点）
+  if(!a.title){
+    items.push({s:"ng", t:"タイトルがありません", m:"AIが最初に読む要素です。", w:7});
+  }else if(!a.desc){
+    score += 4;
+    items.push({s:"warn", t:"meta description がありません",
+      m:"タイトル「" + a.title + "」は取れましたが、要約文がありません。AIが自前で要約するため、意図と違う説明をされやすくなります。", w:7});
+  }else{
+    score += 7;
+    items.push({s:"ok", t:"タイトルと説明文があります", m:a.title, w:7});
+  }
+
+  // 7. 要約の手がかりになる見出し（4点）
+  if(a.spa){
+    items.push({s:"warn", t:"見出しの構成を判定できません", m:"本文がHTMLに含まれていないため、測定できませんでした。", w:0});
+  }else if(a.summaryHeads.length > 0){
+    score += 4;
+    items.push({s:"ok", t:"AIが要約の起点にできる見出しがあります",
+      m:"検出：" + a.summaryHeads.slice(0,4).map(t => "「" + t.slice(0,20) + "」").join(" "), w:4});
+  }else if(a.heads > 0){
+    score += 2;
+    items.push({s:"warn", t:"要約の起点になる見出しがありません（見出しは " + a.heads + " 個）",
+      m:"LLMは「まとめ」「ポイント」「よくある質問」「〜とは」といった見出しを手がかりに要約を作ります。この形の見出しを足すと拾われやすくなります。", w:4});
+  }else{
+    items.push({s:"ng", t:"見出しが1つもありません", m:"文章の構造がAIに伝わりません。", w:4});
+  }
+
+  // 8. 更新日時（3点）
+  if(a.hasDate){ score += 3; items.push({s:"ok", t:"更新日時が機械可読な形で書かれています", m:"情報の鮮度が判定でき、古い情報として除外されにくくなります。", w:3}); }
+  else{ items.push({s:"warn", t:"更新日時が機械可読ではありません",
+    m:"AIは鮮度を判定できないと採用を避けます。<time datetime=\"...\"> か構造化データの dateModified を入れてください。", w:3}); }
+
+  // 9. セマンティック構造（2点）
+  if(a.semantic.length >= 2){
+    score += 2;
+    items.push({s:"ok", t:"HTMLの意味構造が保たれています", m:"使用：" + a.semantic.join(", ") + "（div は " + a.divCount + " 個）", w:2});
+  }else{
+    items.push({s:"warn",
+      t: a.semantic.length ? "意味を持つHTML要素が不足しています" : "意味を持つHTML要素が使われていません",
+      m: "main / article / section など"
+         + (a.semantic.length ? "が「" + a.semantic.join(", ") + "」しか無く" : "が1つも無く")
+         + "、AIには本文とナビゲーションの区別がつきません（div は " + a.divCount + " 個）。", w:2});
+  }
+
+  // 10. llms.txt（1点）— 実効性が低いという実測があるため軽い
+  if(a.hasLlms){ score += 1; items.push({s:"ok", t:"llms.txt があります", m:"Claude・Perplexity・You.com が公式に参照しています。", w:1}); }
+  else{ items.push({s:"warn", t:"llms.txt がありません",
+    m:"AIボットの訪問のうち取得されるのは0.1%程度という実測があり、効果は限定的です。ただし作成コストがほぼゼロなので、置いて損はありません。",
+    f:"下の llms.txt をルートに置くだけです。", w:1}); }
+
+  // 補助（減点なし・情報のみ）
+  if(!a.hasSitemap) items.push({s:"warn", t:"sitemap.xml が見つかりません", m:"ページ全体が網羅的に巡回されにくくなります。減点はしていません。", w:0});
+  if(a.h1s.length === 0) items.push({s:"warn", t:"h1 見出しがありません",
+    m:"主題の特定にはあった方が有利ですが、大手サイトでも省略が一般化しているため減点していません。", w:0});
+  if(!a.lang) items.push({s:"warn", t:"lang 属性がありません", m:"言語が判定できず、日本語サイトとして扱われない場合があります。", w:0});
+  if(a.imgCount > 0 && a.noAlt === a.imgCount)
+    items.push({s:"warn", t:"画像に alt が1つもありません（" + a.imgCount + "枚）", m:"AIは画像の中身を読めないため、alt が唯一の手がかりです。", w:0});
+
+  // 重み順（減点が大きいものを上に）
+  const rank = {ng:0, warn:1, ok:2};
+  items.sort((x,y) => (rank[x.s] - rank[y.s]) || (y.w - x.w));
+
+  return {score: Math.max(0, Math.min(100, Math.round(score))), items, blockedBots};
+}
+
+/* ============ 修正ファイル生成 ============ */
+function generate(a, j){
+  const out = [];
+  const host = safeHost(a.url);
+  const name = a.title ? a.title.split(/[|｜\-–—]/)[0].trim() : (host || "サイト名");
+  const desc = a.desc || (a.bodyText ? a.bodyText.slice(0, 110) + "…" : "（サイトの説明を書いてください）");
+
+  // llms.txt
+  if(!a.hasLlms){
+    let t = "# " + name + "\n\n> " + desc + "\n\n";
+    if(a.h2s.length){
+      t += "## 主な内容\n\n";
+      a.h2s.slice(0, 12).forEach(h => { t += "- " + h + "\n"; });
+      t += "\n";
+    }
+    t += "## 連絡\n\n- サイト: " + (host ? "https://" + host + "/" : "（URL）") + "\n";
+    out.push({file:"llms.txt", where:"サイトのルート（/llms.txt）に置く", body:t});
+  }
+
+  // robots.txt 修正案
+  if(j.blockedBots.length){
+    let t = "# AIクローラーの許可を追加（既存の記述の先頭に置いてください）\n\n";
+    j.blockedBots.forEach(b => { t += "User-agent: " + b.ua + "\nAllow: /\n\n"; });
+    t += "# ここから下は既存の robots.txt をそのまま残す\n";
+    out.push({file:"robots.txt に追記", where:"既存の robots.txt の先頭", body:t});
+  }
+
+  // JSON-LD
+  if(a.ldTypes.length === 0 || a.ldBroken){
+    const ld = {
+      "@context":"https://schema.org",
+      "@type":"Organization",
+      "name": name,
+      "description": desc,
+      "url": host ? "https://" + host + "/" : ""
+    };
+    out.push({
+      file:"JSON-LD（構造化データ）",
+      where:"HTMLの <head> の中に貼る",
+      body:'<script type="application/ld+json">\n' + JSON.stringify(ld, null, 2) + '\n<\/script>'
+    });
+  }
+  return out;
+}
+function safeHost(u){
+  if(!u) return "";
+  try{ return new URL(u).host; }catch(e){ return ""; }
+}
+
+/* ============ 入力の切り出し ============
+   ブックマークレットは複数ファイルを1つのテキストにまとめて渡してくる。
+   区切りが無ければ全体を素のHTMLとして扱う。 */
+const MARK = {html:"===AIV:HTML===", robots:"===AIV:ROBOTS===", llms:"===AIV:LLMS===", sitemap:"===AIV:SITEMAP===", url:"===AIV:URL==="};
+
+function split(text){
+  // 区切りは「その行がマーカーそのもの」のときだけ有効にする。
+  // 部分一致で切ると、診断対象のHTMLに偶然マーカー文字列が含まれていた場合に壊れる
+  // （このツール自身のページがまさにそれに当たる）。
+  const lines = text.split(/\r?\n/);
+  const found = [];   // {key, line}
+  lines.forEach((ln, i) => {
+    const t = ln.trim();
+    for(const k in MARK){
+      if(t === MARK[k] && !found.some(f => f.key === k)) found.push({key:k, line:i});
+    }
+  });
+
+  if(!found.some(f => f.key === "html")){
+    return {html:text, robots:"", llms:null, sitemap:null, url:""};
+  }
+
+  found.sort((a,b) => a.line - b.line);
+  const out = {html:"", robots:"", llms:null, sitemap:null, url:""};
+  found.forEach((f, n) => {
+    const end = n + 1 < found.length ? found[n+1].line : lines.length;
+    out[f.key] = lines.slice(f.line + 1, end).join("\n").trim();
+  });
+  return out;
+}
+
+/* ============ 描画 ============ */
+function render(text, urlHint){
+  const p = split(text);
+  if(!p.html || !/</.test(p.html)) throw new Error("HTMLとして読み取れませんでした。ページのソースを貼り付けてください。");
+
+  // 実在サイトの多くは、存在しないパスに対して 403/404 と一緒に「HTMLのエラーページ」を返す。
+  // 中身が空でないことを存在の根拠にすると、404ページを llms.txt と誤認して加点してしまう。
+  // 形式そのものを検査して弾く。
+  const isHtmlDoc = t => /^\s*(<!doctype\s+html|<html[\s>]|<!--)/i.test(t || "") || /<\/html>/i.test(t || "");
+  const validRobots  = (p.robots && !isHtmlDoc(p.robots) && /user-agent\s*:/i.test(p.robots)) ? p.robots : "";
+  const hasLlms      = !!(p.llms && !isHtmlDoc(p.llms) && p.llms.trim().length > 0);
+  const hasSitemap   = !!(p.sitemap && !isHtmlDoc(p.sitemap) && /<(urlset|sitemapindex)\b/i.test(p.sitemap));
+  const a = analyze(p.html, validRobots, hasLlms, hasSitemap, p.url || urlHint || "");
+  const j = judge(a);
+
+  $("sN").innerHTML = j.score + "<small>/100</small>";
+  const v = j.score >= 80 ? ["よく見えています", "var(--ok)"]
+          : j.score >= 55 ? ["部分的にしか見えていません", "var(--warn)"]
+          : ["ほとんど見えていません", "var(--ng)"];
+  $("sN").style.color = v[1];
+  $("sV").textContent = v[0];
+  $("sV").style.color = v[1];
+  $("sD").textContent = p.robots || p.llms !== null
+    ? "HTML・robots.txt・llms.txt・sitemap.xml を解析しました。"
+    : "HTMLのみで判定しました。robots.txt を含めると精度が上がります（ブックマークレット推奨）。";
+
+  const ic = {ok:"✅", warn:"⚠️", ng:"❌"};
+  $("items").innerHTML = j.items.map(x =>
+    '<div class="item ' + x.s + '"><div class="ic">' + ic[x.s] + '</div><div>'
+    + '<div class="t">' + esc(x.t) + '</div>'
+    + '<div class="m">' + esc(x.m) + '</div>'
+    + (x.f ? '<div class="fix">→ ' + esc(x.f) + '</div>' : '')
+    + '</div></div>'
+  ).join("");
+
+  const gens = generate(a, j);
+  $("gens").innerHTML = gens.length
+    ? gens.map((g, i) =>
+        '<div class="gen"><div class="genhead"><b>' + esc(g.file) + '</b>'
+        + '<span>' + esc(g.where) + '</span>'
+        + '<button class="ghost sm" data-copy="' + i + '">コピー</button></div>'
+        + '<pre id="g' + i + '">' + esc(g.body) + '</pre></div>'
+      ).join("")
+    : '<div class="item ok"><div class="ic">✅</div><div><div class="t">追加で必要なファイルはありません</div>'
+      + '<div class="m">主要な項目は満たしています。</div></div></div>';
+
+  $("gens").querySelectorAll("[data-copy]").forEach(b => {
+    b.onclick = async () => {
+      const body = gens[+b.dataset.copy].body;
+      try{ await navigator.clipboard.writeText(body); b.textContent = "コピーしました"; }
+      catch(e){ window.prompt("コピーしてください", body); return; }
+      setTimeout(() => b.textContent = "コピー", 1600);
+    };
+  });
+
+  LAST = {a, j};
+  $("err").style.display = "none";
+  $("out").style.display = "block";
+  $("out").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ============ 共有用カードの描画 ============
+   1200×630（OGP / X のカード比）。URLやドメインは載せない——
+   「うちのサイトは何点だった」を晒しやすくするのが目的で、
+   どのサイトかを晒させるとシェアされなくなる。 */
+let LAST = null;
+
+function drawCard(){
+  if(!LAST) return null;
+  const {a, j} = LAST, W = 1200, H = 630;
+  const c = $("cv"), x = c.getContext("2d");
+  const F = w => w + 'px system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif';
+
+  const theme = j.score >= 80 ? ["#04231c","#0b3d2e","#22c98a"]
+              : j.score >= 55 ? ["#2a1f04","#4a3506","#ffb020"]
+              :                 ["#2a0710","#4d0f1c","#ff5d6c"];
+  const g = x.createLinearGradient(0,0,W,H);
+  g.addColorStop(0, theme[0]); g.addColorStop(1, theme[1]);
+  x.fillStyle = g; x.fillRect(0,0,W,H);
+
+  const orb = x.createRadialGradient(1000,120,0,1000,120,460);
+  orb.addColorStop(0, theme[2] + "33"); orb.addColorStop(1, theme[2] + "00");
+  x.fillStyle = orb; x.fillRect(0,0,W,H);
+
+  x.textAlign = "left";
+  x.fillStyle = "rgba(255,255,255,.55)"; x.font = "600 " + F(24);
+  x.fillText("AIから見えていますか", 70, 88);
+
+  // スコア
+  x.fillStyle = theme[2]; x.font = "800 " + F(170);
+  x.fillText(String(j.score), 70, 250);
+  const w = x.measureText(String(j.score)).width;
+  x.fillStyle = "rgba(255,255,255,.45)"; x.font = "700 " + F(44);
+  x.fillText("/100", 82 + w, 250);
+
+  x.fillStyle = "#fff"; x.font = "800 " + F(40);
+  x.fillText(j.score >= 80 ? "よく見えています"
+           : j.score >= 55 ? "部分的にしか見えていません"
+           : "ほとんど見えていません", 70, 320);
+
+  // 指摘は常に3枠。❌を優先し、足りなければ⚠️で埋め、どちらも無ければ良い点を出す
+  const ng   = j.items.filter(i => i.s === "ng");
+  const warn = j.items.filter(i => i.s === "warn" && i.w > 0);
+  let list = [...ng, ...warn].slice(0,3);
+  if(list.length === 0) list = j.items.filter(i => i.s === "ok").slice(0,3);
+  list.forEach((it, i) => {
+    const y = 400 + i * 62;
+    x.fillStyle = "rgba(255,255,255,.10)";
+    round(x, 70, y - 34, 1060, 50, 12); x.fill();
+    x.fillStyle = it.s === "ng" ? theme[2] : "rgba(255,255,255,.75)";
+    x.font = "700 " + F(26);
+    const mark = it.s === "ng" ? "×  " : it.s === "warn" ? "!  " : "✓  ";
+    x.fillText(mark + clip(x, it.t, 960), 92, y);
+  });
+
+  x.fillStyle = "rgba(255,255,255,.40)"; x.font = "600 " + F(22);
+  x.fillText("ゼロクリック検索 68% の時代に、AIから自分のサイトが読めているかを測る", 70, 596);
+  return c;
+}
+function clip(x, s, max){
+  if(x.measureText(s).width <= max) return s;
+  let t = s;
+  while(t.length > 4 && x.measureText(t + "…").width > max) t = t.slice(0, -1);
+  return t + "…";
+}
+function round(x,a,b,w,h,r){
+  x.beginPath();
+  x.moveTo(a+r,b); x.lineTo(a+w-r,b); x.quadraticCurveTo(a+w,b,a+w,b+r);
+  x.lineTo(a+w,b+h-r); x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);
+  x.lineTo(a+r,b+h); x.quadraticCurveTo(a,b+h,a,b+h-r);
+  x.lineTo(a,b+r); x.quadraticCurveTo(a,b,a+r,b); x.closePath();
+}
+
+function shareText(){
+  if(!LAST) return "";
+  const {j} = LAST;
+  const ng = j.items.filter(i => i.s === "ng").slice(0,2).map(i => "・" + i.t).join("\n");
+  return "自分のサイトが AI から見えているか診断したら " + j.score + "/100 でした。\n"
+       + (ng ? ng + "\n" : "")
+       + "\n検索した人の約7割はもうサイトに来ない（ゼロクリック68%）そうです。\n#AIから見えていますか";
+}
+
+const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function fail(m){ const e = $("err"); e.textContent = m; e.style.display = "block"; $("out").style.display = "none"; }
+function run(text, url){ try{ render(text, url); }catch(e){ fail(e.message || "解析に失敗しました。"); } }
+
+/* ============ 配線 ============ */
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === t));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === t.dataset.p));
+});
+
+const drop = $("drop"), file = $("file");
+drop.onclick = () => file.click();
+file.onchange = e => readFile(e.target.files[0]);
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => readFile(e.dataTransfer.files[0]));
+
+function readFile(f){
+  if(!f){ fail("ファイルが選択されていません。"); return; }
+  const r = new FileReader();
+  r.onerror = () => fail("ファイルを読み込めませんでした。");
+  r.onload = () => run(String(r.result), "");
+  r.readAsText(f);
+}
+
+$("run2").onclick = () => {
+  const t = $("src").value.trim();
+  if(!t){ fail("ソースを貼り付けてください。"); return; }
+  run(t, $("url2").value.trim());
+};
+
+$("shareImg").onclick = () => {
+  const c = drawCard();
+  if(!c) return;
+  const a = document.createElement("a");
+  a.href = c.toDataURL("image/png");
+  a.download = "ai-visible-" + (LAST ? LAST.j.score : 0) + ".png";
+  a.click();
+};
+
+$("shareX").onclick = () => {
+  const t = shareText();
+  if(!t) return;
+  window.open("https://x.com/intent/post?text=" + encodeURIComponent(t), "_blank", "noopener");
+};
+
+$("shareCopy").onclick = async () => {
+  const t = shareText();
+  if(!t) return;
+  const b = $("shareCopy");
+  try{ await navigator.clipboard.writeText(t); b.textContent = "コピーしました"; }
+  catch(e){ window.prompt("コピーしてください", t); return; }
+  setTimeout(() => b.textContent = "結果を文章でコピー", 1600);
+};
+
+/* ブックマークレット: 同一オリジンの4ファイルを集めてクリップボードへ */
+(function(){
+  const code = `(async()=>{
+try{
+ const g=async p=>{try{const r=await fetch(p,{cache:'no-store'});return r.ok?await r.text():'';}catch(e){return '';}};
+ const o=location.origin;
+ const [rb,lm,sm]=await Promise.all([g(o+'/robots.txt'),g(o+'/llms.txt'),g(o+'/sitemap.xml')]);
+ const t='${MARK.url}\\n'+location.href+'\\n${MARK.html}\\n'+document.documentElement.outerHTML
+   +'\\n${MARK.robots}\\n'+rb+'\\n${MARK.llms}\\n'+lm+'\\n${MARK.sitemap}\\n'+sm;
+ let ok=false;
+ try{await navigator.clipboard.writeText(t);ok=true;}catch(e){}
+ if(!ok){
+  const a=document.createElement('textarea');
+  a.value=t;
+  a.style.cssText='position:fixed;top:8px;left:8px;width:calc(100% - 16px);height:60vh;z-index:2147483647;font-size:12px;padding:8px;border:3px solid #5b8cff;background:#fff;color:#000';
+  document.body.appendChild(a);a.focus();a.select();
+  try{ok=document.execCommand('copy');}catch(e){}
+  if(ok){a.remove();}
+  else{a.scrollIntoView();alert('自動コピーが許可されませんでした。表示された枠の中身を全選択してコピーしてください（枠外をクリックすると消えます）。');
+       a.addEventListener('blur',function(){a.remove();});return;}
+ }
+ alert('コピーしました。診断ページの「ソースを貼る」に貼り付けてください。');
+}catch(e){alert('取得に失敗しました: '+e.message);}
+})()`.replace(/\s*\n\s*/g, "");
+  $("bmk").href = "javascript:" + encodeURIComponent(code);
+  $("bmk").onclick = e => { e.preventDefault(); alert("クリックではなく、このボタンをブックマークバーにドラッグしてください。"); };
+})();
+</script>
+</body>
+</html>

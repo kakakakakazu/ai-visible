@@ -1,0 +1,40 @@
+# AIから見えていますか
+
+> ChatGPT・Claude・Perplexity・Gemini などのAIから、Webサイトの中身が読めているかを100点満点で診断し、修正ファイル（llms.txt / robots.txt / JSON-LD）を自動生成する無料ツール。外部APIもサーバーも使わず、全処理を閲覧者のブラウザ内で完結させるため、入力したデータは一切送信されない。
+
+## 何のためのツールか
+
+検索した人の68%がサイトを訪れずに終わる（ゼロクリック検索、2026年）。10〜20代の47.4%は最初からAIに質問する。この状況で流入が減ったとき、原因の多くはコンテンツの質ではなく、AIがサイトの中身に到達できていないことにある。robots.txt による遮断と、JavaScript依存による本文の不可視化——この2つで配点の48%を占める。
+
+## 診断項目と配点
+
+- AIクローラー13種類の遮断検出（28点）— GPTBot / OAI-SearchBot / ChatGPT-User / ClaudeBot / anthropic-ai / Claude-Web / PerplexityBot / Perplexity-User / Google-Extended / Applebot-Extended / CCBot / Amazonbot / meta-externalagent
+- 本文がHTMLに存在するか（20点）— JavaScript依存でAIに空ページと見える状態の検出
+- 構造化データ JSON-LD の有無と妥当性（12点）
+- 出典・一次情報へのリンク（12点）
+- 統計・数値の含有量（11点）
+- タイトルとmeta description（7点）
+- 要約の起点になる見出し（4点）— 「まとめ」「〜とは」「よくある質問」など
+- 更新日時の機械可読性（3点）
+- HTMLの意味構造（2点）— main / article / section の使用
+- llms.txt の設置（1点）
+
+## 配点の根拠
+
+出典12点・統計11点という重みは、KDD 2024 で発表された査読論文「GEO: Generative Engine Optimization」（プリンストン大学ほか）の測定結果に基づく。出典の明記で生成エンジンでの可視性が約40%、統計の追加で約37%、引用の追加で約22%向上した。
+llms.txt を1点に留めているのは、AIボットの訪問のうち llms.txt が取得されるのは0.1%程度という実測があり、主要クローラーが llms.txt を無視して直接HTMLを読む傾向があるため。
+h1 の有無は減点対象にしていない。実在サイト6件中5件が h1 を持たず、減点の根拠が薄いと判断した。
+
+## 技術的特徴
+
+- 外部APIを1回も呼ばない。判定はすべて決定的なルールによる静的解析
+- サーバーを持たない。単一のHTMLファイルで動作する
+- robots.txt の解析は RFC 9309 に準拠（User-agent 専用ブロックがワイルドカードに優先）
+- 入力データは送信されず、ブラウザのメモリ上のみで処理される
+
+## 参照している規格
+
+- RFC 9309 Robots Exclusion Protocol: https://www.rfc-editor.org/rfc/rfc9309.html
+- schema.org: https://schema.org/
+- llms.txt: https://llmstxt.org/
+- GEO: Generative Engine Optimization (KDD 2024): https://dl.acm.org/doi/10.1145/3637528.3671900
