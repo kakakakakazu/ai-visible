@@ -194,3 +194,93 @@ ${JSON.stringify(ld, null, 2)}
 
 fs.writeFileSync(__dirname + "/../data.html", html);
 console.log(`data.html を生成しました（${d.observedAt} 時点、${d.nRobots}サイト）`);
+
+/* ============ X への投稿文を生成する ============
+ *
+ * 拡散は raffy 本人が手で投稿する（制約5、2026-08-10 復活）。
+ * X API は 2026-02-06 に無料枠が廃止され、リンク付き投稿は1件 $0.20 かかるため使わない。
+ *
+ * ここでの責務は「考えずにコピペできる完成形を渡すこと」。毎週データが変わるので、
+ * 毎週新しい数字で投稿できる。文面を人間が組み立て直す必要がない状態にする。
+ *
+ * 文字数: X は全角を2、URLを一律23としてカウントし、上限は280。つまり日本語なら
+ * 実質128文字＋URLが上限になる。生成時に実測して、超えていれば警告する。
+ */
+function xLength(s) {
+  // URL は実際の長さに関わらず23文字として数えられる
+  const withoutUrls = s.replace(/https?:\/\/\S+/g, "");
+  const urlCount = (s.match(/https?:\/\/\S+/g) || []).length;
+  let n = 0;
+  for (const ch of withoutUrls) n += /[\x00-\x7F｡-ﾟ]/.test(ch) ? 1 : 2;
+  return n + urlCount * 23;
+}
+
+const SITE = "https://kakakakakazu.github.io/ai-visible/";
+const DATA = "https://kakakakakazu.github.io/ai-visible/data.html";
+const CERT = "https://kakakakakazu.github.io/ai-visible/certified.html";
+const MAIL = "https://kakakakakazu.github.io/mail-visible/";
+
+const posts = [
+  {
+    label: "実測データ（毎週数字が変わるので使い回せます）",
+    text: `日本の主要${d.nRobots}サイトのAI可読性を実測しました。
+
+・AIクローラーを遮断 ${pct(d.blockedAny)}
+・AIには空ページに見える ${pct(d.invisibleToAI)}
+・llms.txt 設置率 ${pct(d.hasLlmsTxt)}
+・可読性スコア中央値 ${d.score ? d.score.median : "—"}点（最低${d.score ? d.score.min : "—"}点）
+
+毎週自動更新しています
+${DATA}`,
+  },
+  {
+    label: "診断ツールの紹介",
+    text: `サイトのHTMLを貼るだけで、ChatGPTやClaudeから中身が読めているかを100点満点で診断するツールを作りました。
+
+サーバーに何も送らず、全部ブラウザ内で処理します。無料・登録不要。
+修正用の llms.txt や JSON-LD もその場で生成します。
+
+${SITE}`,
+  },
+  {
+    label: "メール診断ツールの紹介",
+    text: `ドメイン名を入れるだけで、SPF / DKIM / DMARC の設定を100点満点で診断するツールを作りました。
+
+2024年2月からGmailとYahooが一括送信者にDMARCを求めています。
+
+サーバーを持たず、ブラウザから直接DNSを引いています。無料・登録不要。
+${MAIL}`,
+  },
+  {
+    label: "認証の紹介",
+    text: `AIから読める状態にあることを機械的に検証する認証を作りました。無料です。
+
+既存のWeb認証が高額なのは審査員の人件費が原価だからで、機械で判定できる領域ならその原価は出ません。
+
+判定コードは公開。毎週自動で再検証し、基準を割れば失効します。
+
+${CERT}`,
+  },
+  {
+    label: "一番刺さりやすい単発（数字ひとつに絞る）",
+    text: `日本の主要サイトを実測したところ、${pct(d.invisibleToAI)}が「AIから見ると本文が空」の状態でした。
+
+JavaScriptで本文を描画していると、多くのAIクローラーは実行しないので何も読めません。検索には出るのに、AIの回答には出てこない状態になります。
+
+${DATA}`,
+  },
+];
+
+const postFile = posts.map(p => {
+  const n = xLength(p.text);
+  const warn = n > 280 ? `  ⚠️ ${n - 280}文字オーバー。短くしてください` : `  （${n}/280）`;
+  return `── ${p.label}${warn}\n\n${p.text}\n`;
+}).join("\n" + "─".repeat(60) + "\n\n");
+
+fs.writeFileSync(__dirname + "/../data/post.txt",
+  `X 投稿用の下書き（${d.observedAt} 時点のデータで自動生成）\n` +
+  `そのままコピペできます。上から順に使う必要はありません。\n\n` +
+  "─".repeat(60) + "\n\n" + postFile);
+
+const over = posts.filter(p => xLength(p.text) > 280).length;
+console.log(`data/post.txt を生成しました（${posts.length}本${over ? `、うち${over}本が文字数超過` : "、全て文字数内"}）`);
