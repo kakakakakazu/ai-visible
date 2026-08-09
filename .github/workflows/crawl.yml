@@ -1,0 +1,40 @@
+name: 巡回して集計を更新
+
+# Perplexity は「30日以内に更新された内容」の引用率が82%、古いと37%に落ちる（2026年実測）。
+# 鮮度そのものが流入経路なので、週次で回す。
+on:
+  schedule:
+    - cron: "0 18 * * 0"      # 毎週月曜 03:00 JST（UTC 日曜18:00）
+  workflow_dispatch:           # 手動実行も可
+
+# public リポジトリの標準ランナーは無料・分数制限なし（2026-08 時点）
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 依存をインストール
+        working-directory: crawl
+        run: npm ci || npm install
+
+      - name: 巡回（robots.txt を尊重、同一ホストへ2秒間隔）
+        run: node crawl/crawl.cjs
+
+      # 数字をHTMLに焼き込む。JSで描画するとAIクローラーに読まれない
+      - name: 公開ページを生成
+        run: node crawl/render.cjs
+
+      - name: 集計とページをコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json data.html
+          git diff --staged --quiet || git commit -m "巡回: $(date -u +%Y-%m-%d) の集計を更新"
+          git push

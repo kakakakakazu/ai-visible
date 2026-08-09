@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-08-09",
+  "nRobots": 24,
+  "nFull": 21,
+  "skipped": 0,
+  "failed": 3,
+  "method": "robots.txt は全対象から、本文由来の項目は取得を許可されたサイトのみから集計",
+  "blockedAny": 16.7,
+  "blockedByBot": {
+    "GPTBot": 16.7,
+    "OAI-SearchBot": 8.3,
+    "ChatGPT-User": 12.5,
+    "ClaudeBot": 12.5,
+    "anthropic-ai": 12.5,
+    "Claude-Web": 8.3,
+    "PerplexityBot": 12.5,
+    "Perplexity-User": 4.2,
+    "Google-Extended": 16.7,
+    "Applebot-Extended": 12.5,
+    "CCBot": 12.5,
+    "Amazonbot": 4.2,
+    "meta-externalagent": 12.5
+  },
+  "score": {
+    "median": 76,
+    "p25": 66,
+    "p75": 82,
+    "min": 19,
+    "max": 91
+  },
+  "invisibleToAI": 9.5,
+  "hasStructuredData": 38.1,
+  "brokenStructuredData": 0,
+  "hasLlmsTxt": 0,
+  "hasSitemap": 47.6,
+  "hasAuthoritativeLinks": 19,
+  "noExternalLinks": 4.8,
+  "hasMachineReadableDate": 28.6,
+  "poorSemantics": 23.8,
+  "statsPerPage": {
+    "median": 8
+  },
+  "bodyLength": {
+    "median": 4369
+  }
+}

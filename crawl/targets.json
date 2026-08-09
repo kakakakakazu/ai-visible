@@ -1,0 +1,47 @@
+{
+  "_note": [
+    "巡回対象＝統計の母集団。公開する数字の信頼性は、判定ロジックではなくこの一覧の作り方で決まる。",
+    "偏りを避けるため、業種を散らして選ぶ。「上位トラフィック順」で取ると大手ECとポータルに寄り、",
+    "『日本のサイトの◯%が』と言えなくなる。カテゴリごとの内訳も一緒に公開する前提で組む。",
+    "到達性はまだ未検証。crawl.cjs の mayCrawl 実装後、初回実行のログで fail を確認して整理する。"
+  ],
+  "_categories": {
+    "public": "公的機関",
+    "media": "メディア・報道",
+    "commerce": "EC・予約",
+    "tech": "技術・開発者向け",
+    "saas": "SaaS・業務ツール",
+    "corporate": "企業サイト"
+  },
+  "origins": [
+    "https://www.soumu.go.jp",
+    "https://www.mhlw.go.jp",
+    "https://www.chusho.meti.go.jp",
+    "https://www.jetro.go.jp",
+    "https://www.stat.go.jp",
+
+    "https://www.nhk.or.jp",
+    "https://www.asahi.com",
+    "https://www.itmedia.co.jp",
+    "https://note.com",
+    "https://www.aozora.gr.jp",
+
+    "https://www.rakuten.co.jp",
+    "https://cookpad.com",
+    "https://tabelog.com",
+    "https://suumo.jp",
+    "https://jp.mercari.com",
+
+    "https://zenn.dev",
+    "https://qiita.com",
+    "https://developer.mozilla.org",
+
+    "https://www.freee.co.jp",
+    "https://smarthr.jp",
+    "https://cybozu.co.jp",
+
+    "https://www.jreast.co.jp",
+    "https://www.toyota.co.jp",
+    "https://www.muji.com"
+  ]
+}

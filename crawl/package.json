@@ -1,0 +1,6 @@
+{
+  "name": "ai-visible-crawl",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": { "linkedom": "^0.18.13" }
+}
