@@ -97,6 +97,14 @@ h1 の有無は減点対象にしていません。実在サイト6件を調べ�
 - [llms.txt](https://llmstxt.org/)
 - [GEO: Generative Engine Optimization (KDD 2024)](https://dl.acm.org/doi/10.1145/3637528.3671900)
 
+## 関連ツール
+
+- **[メールは届いていますか](https://kakakakakazu.github.io/mail-visible/)** — SPF / DKIM / DMARC の設定を100点満点で診断。こちらもサーバーを持たず、ブラウザから直接DNSを引きます
+
+## お問い合わせ
+
+認証の申請、掲載の削除依頼、不具合の報告は [Issue](https://github.com/kakakakakazu/ai-visible/issues) でお願いします。掲載の削除に理由の説明は不要です。
+
 ## ライセンス
 
 MIT

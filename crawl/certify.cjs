@@ -195,6 +195,8 @@ function renderPage(d) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const BADGE = "https://kakakakakazu.github.io/ai-visible/badge.svg";
   const PAGE = "https://kakakakakazu.github.io/ai-visible/certified.html";
+  // 申請と削除依頼の窓口。認証を名乗る以上、連絡手段が無いのは筋が通らない
+  const ISSUES = "https://github.com/kakakakakazu/ai-visible/issues";
 
   // 多層防御。発行側で弾いていても、古い certified.json を読んだ場合に備えて出力側でも検証する
   const safe = d.certified.filter(c => safeOrigin(c.origin) === c.origin);
@@ -329,13 +331,14 @@ ${JSON.stringify(ld, null, 2)}
   <p>かかりません。判定は自動で、運営に人手も設備も要らないためです。</p>
 
   <h3>申請するには</h3>
-  <p>リポジトリの <code>crawl/applicants.json</code> にサイトのURLを追加してください。
-  次回の巡回で自動的に判定されます。<strong>申請はそのサイトの運営者ご本人がおこなってください。</strong></p>
+  <p><a href="${ISSUES}/new?title=%E8%AA%8D%E8%A8%BC%E3%81%AE%E7%94%B3%E8%AB%8B&amp;body=%E5%AF%BE%E8%B1%A1URL%3A%20">GitHub の Issue でURLをお送りください。</a>
+  次回の巡回で自動的に判定されます。費用はかかりません。
+  <strong>申請はそのサイトの運営者ご本人がおこなってください。</strong></p>
 
   <h3>掲載をやめてほしい場合は</h3>
-  <p><strong>ご連絡いただければ、確認のうえ一覧から削除します。</strong>
+  <p><a href="${ISSUES}/new?title=%E6%8E%B2%E8%BC%89%E3%81%AE%E5%89%8A%E9%99%A4%E4%BE%9D%E9%A0%BC&amp;body=%E5%AF%BE%E8%B1%A1URL%3A%20"><strong>こちらからご連絡いただければ、確認のうえ一覧から削除します。</strong></a>
   第三者が誤って申請した場合や、掲載を望まれない場合が考えられるためです。
-  掲載の継続に同意を要求することはありません。</p>
+  <strong>掲載の継続に同意を要求することはありません。</strong>理由の説明も不要です。</p>
 
   <h2>まとめ</h2>
   <ul>
@@ -349,7 +352,8 @@ ${JSON.stringify(ld, null, 2)}
     <p><a href="./">AIから見えていますか</a>（無料のAI可読性診断）｜
     <a href="./data.html">主要サイトの実測データ</a>｜
     <a href="https://kakakakakazu.github.io/mail-visible/">メールは届いていますか</a></p>
-    <p>判定コードと基準はMITライセンスで公開しています。</p>
+    <p>判定コードと基準はMITライセンスで公開しています。
+    お問い合わせ・申請・削除依頼は <a href="${ISSUES}">GitHub の Issue</a> で受け付けています。</p>
     <p>参照: <a href="https://dl.acm.org/doi/10.1145/3637528.3671900">GEO: Generative Engine Optimization (KDD 2024)</a>｜
     <a href="https://www.rfc-editor.org/rfc/rfc9309.html">RFC 9309 (robots.txt)</a>｜
     <a href="https://schema.org/Certification">schema.org/Certification</a></p>
