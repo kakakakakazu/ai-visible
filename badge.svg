@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="168" height="40" viewBox="0 0 168 40" role="img" aria-label="AI可読 認証済み AIV-1">
+  <title>AI可読 認証済み AIV-1</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".10"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".10"/>
+    </linearGradient>
+    <clipPath id="r"><rect width="168" height="40" rx="8"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="106" height="40" fill="#1f2430"/>
+    <rect x="106" width="62" height="40" fill="#2563eb"/>
+    <rect width="168" height="40" fill="url(#g)"/>
+  </g>
+  <g font-family="system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif">
+    <text x="32" y="17.5" fill="#fff" font-size="10.5" opacity=".6">AI可読</text>
+    <text x="32" y="30.5" fill="#fff" font-size="12.5" font-weight="700">認証済み</text>
+    <text x="137" y="25" fill="#fff" font-size="13" font-weight="700" text-anchor="middle" letter-spacing=".2">AIV-1</text>
+  </g>
+  <path d="M13 20l4 4 8-8" fill="none" stroke="#3fb950" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

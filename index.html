@@ -78,6 +78,10 @@
   button:hover{filter:brightness(1.12)}
   button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
   button.sm{padding:9px 14px;font-size:12.5px}
+  /* ボタンと同じ見た目のリンク。認証ページへの遷移は button ではなく a である必要がある */
+  .btnlink{display:inline-block;border:1px solid var(--line);border-radius:12px;padding:14px 22px;
+    font-size:14px;font-weight:700;color:var(--fg);text-decoration:none;transition:.15s}
+  .btnlink:hover{border-color:var(--acc);color:var(--acc)}
 
   .note{color:var(--dim);font-size:13px;margin-top:14px}
   .note code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
@@ -197,6 +201,22 @@
   </div>
 </div>
 <canvas id="cv" width="1200" height="630"></canvas>
+
+<section id="cert">
+  <h2>AI可読 認証（AIV-1）</h2>
+  <div class="h2sub">基準を満たしていれば、無料でバッジを掲示できます。審査員はいません。</div>
+  <p class="note" style="margin-top:6px">この診断と<b style="color:var(--fg)">同じ判定ロジック</b>で、
+  <b style="color:var(--fg)">AIクローラーを遮断していないこと・本文がHTMLにあること・80点以上</b>の3つを満たすかを機械的に確認します。
+  閾値の80点は、実測した主要24サイトの<b style="color:var(--fg)">第3四分位が82点</b>だったことに基づく線です。
+  <b style="color:var(--fg)">毎週自動で再検証</b>し、満たさなくなったサイトは自動で失効します。</p>
+  <p style="margin:14px 0 8px">
+    <img src="badge.svg" alt="AI可読 認証 AIV-1 のバッジ" width="168" height="40" style="vertical-align:middle">
+  </p>
+  <p class="note">落ちたことは公開されません。個別のスコアも公開しません。順位をつけるための仕組みではないためです。</p>
+  <div class="actions">
+    <a class="btnlink" href="certified.html">基準と認証済み一覧を見る</a>
+  </div>
+</section>
 
 <section id="faq">
   <h2>よくある質問</h2>

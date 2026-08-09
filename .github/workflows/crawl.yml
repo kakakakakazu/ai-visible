@@ -31,10 +31,15 @@ jobs:
       - name: 公開ページを生成
         run: node crawl/render.cjs
 
+      # 申請サイトを審査し、基準を割ったものは自動で失効させる。
+      # 「今も満たしている」ことの確認が認証の中身なので、発行と同じ頻度で回す必要がある。
+      - name: 認証を再検証（AIV-1）
+        run: node crawl/certify.cjs
+
       - name: 集計とページをコミット
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/latest.json data.html
-          git diff --staged --quiet || git commit -m "巡回: $(date -u +%Y-%m-%d) の集計を更新"
+          git add data/latest.json data.html data/certified.json certified.html
+          git diff --staged --quiet || git commit -m "巡回: $(date -u +%Y-%m-%d) の集計と認証を更新"
           git push

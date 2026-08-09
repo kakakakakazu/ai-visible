@@ -210,4 +210,11 @@ async function main() {
   console.log("\n" + JSON.stringify(stats, null, 2));
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+/* 直接実行されたときだけ巡回する。
+   認証スクリプト（certify.cjs）は inspect() だけを借りる。判定を二重実装すると
+   統計版と認証版で結果がズレ、engine.js を1本化した意味が消えるため。 */
+if (require.main === module) {
+  main().catch(e => { console.error(e); process.exit(1); });
+}
+
+module.exports = { inspect, get, mayCrawl, aggregate, CRAWL };
