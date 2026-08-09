@@ -9,6 +9,7 @@
     "URLは certify.cjs の safeOrigin() が検証する。http/https 以外のスキームは自動で除外される。"
   ],
   "origins": [
-    "https://kakakakakazu.github.io/ai-visible"
+    "https://kakakakakazu.github.io/ai-visible",
+    "https://kakakakakazu.github.io/mail-visible"
   ]
 }
