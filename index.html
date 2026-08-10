@@ -60,7 +60,7 @@
     cursor:pointer;transition:.15s;background:var(--card)}
   .drop:hover,.drop.over{border-color:var(--acc);background:#181b23}
   .drop b{font-size:17px}
-  .drop span{display:block;color:var(--dim);font-size:13px;margin-top:8px}
+  .drop span{display:block;color:var(--dim);font-size:14px;line-height:1.7;margin-top:8px}
   input[type=file]{display:none}
 
   textarea{width:100%;height:200px;background:var(--card);color:var(--fg);border:1px solid var(--line);
@@ -83,7 +83,7 @@
     font-size:14px;font-weight:700;color:var(--fg);text-decoration:none;transition:.15s}
   .btnlink:hover{border-color:var(--acc);color:var(--acc)}
 
-  .note{color:var(--dim);font-size:13px;margin-top:14px}
+  .note{color:var(--dim);font-size:14px;line-height:1.8;margin-top:14px}
   .note code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
     font-size:12px;font-family:ui-monospace,Menlo,monospace}
 
@@ -102,13 +102,13 @@
     padding:18px 20px;margin-top:10px;display:flex;gap:14px;align-items:flex-start}
   .item .ic{font-size:17px;line-height:1.5;flex-shrink:0}
   .item .t{font-weight:700;font-size:14.5px}
-  .item .m{color:var(--dim);font-size:13px;margin-top:5px}
-  .item .fix{color:var(--acc);font-size:12.5px;margin-top:8px}
+  .item .m{color:var(--dim);font-size:14.5px;line-height:1.8;margin-top:6px}
+  .item .fix{color:var(--acc);font-size:14px;line-height:1.75;margin-top:9px}
   .item.ng{border-color:rgba(255,93,108,.4)}
   .item.warn{border-color:rgba(255,176,32,.3)}
 
   h2{font-size:16px;margin:34px 0 4px;font-weight:700}
-  .h2sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .h2sub{color:var(--dim);font-size:14px;line-height:1.8;margin-bottom:14px}
 
   pre{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;
     overflow-x:auto;font-size:12.5px;font-family:ui-monospace,Menlo,monospace;line-height:1.65;
@@ -191,6 +191,19 @@
   <h2>そのまま使える修正ファイル</h2>
   <div class="h2sub">コピーして、サイトに置いてください。</div>
   <div id="gens"></div>
+
+  <h2>AIに直してもらう</h2>
+  <div class="h2sub">診断結果を、ChatGPT や Claude にそのまま渡せる形でコピーします。
+  自分のページのHTMLと一緒に貼れば、具体的な修正コードを書いてもらえます。
+  上の修正ファイルでは直せない<b style="color:var(--fg)">本文の書き方や構造の問題</b>は、この方法が早いです。</div>
+  <div class="actions">
+    <button class="primary" id="aiCopy">AIへの依頼文をコピー</button>
+  </div>
+  <p class="note">コピーするだけです。どこにも送信されません。貼り付け先のAIには、診断結果とこのページの実測値だけが渡ります。</p>
+  <div id="aiFallback" style="display:none;margin-top:14px">
+    <p class="note" style="margin-top:0">自動コピーができませんでした。下の枠の中を選択してコピーしてください（すでに全選択されています）。</p>
+    <textarea id="aiText" readonly style="height:200px;font-size:13px"></textarea>
+  </div>
 
   <h2>結果を共有する</h2>
   <div class="h2sub">画像を保存して投稿できます。URLは含まれないので、どのサイトを診断したかは伏せたまま共有できます。</div>
@@ -498,6 +511,59 @@ function shareText(){
        + "\n検索した人の約7割はもうサイトに来ない（ゼロクリック68%）そうです。\n#AIから見えていますか";
 }
 
+/* 診断結果を、生成AIがそのまま作業できる依頼文に変換する。
+   ここが「実行時にAIを呼ばない」制約の下でAIの力を使う唯一の経路になる。
+   こちらはAPIを一切叩かず、利用者が自分のChatGPT/Claudeに貼るだけなので原価はゼロのまま。
+   定型ファイル（llms.txt / JSON-LD）で直せるものは上のセクションで配っているので、
+   ここでは「本文の書き方・構造」といった定型では直せない問題をAIに委ねることを狙う。 */
+function aiPromptText(){
+  if(!LAST) return "";
+  const {a, j} = LAST;
+  const L = [];
+
+  const block = (title, arr) => {
+    if(!arr.length) return;
+    L.push("", "■ " + title, "");
+    arr.forEach((i, n) => {
+      L.push(`【${n+1}】${i.t}` + (i.w ? `　／　配点 ${i.w}点` : ""));
+      if(i.m) L.push(i.m);
+      if(i.f) L.push("対応の方向: " + i.f);
+      L.push("");
+    });
+  };
+
+  L.push("以下は、私のWebサイトが「生成AI（ChatGPT・Claude・Perplexity など）から読めているか」を診断した結果です。");
+  L.push("指摘された問題を直すための、そのまま貼り付けられるHTMLコードを書いてください。");
+  L.push("", "──────────────────", `■ 総合スコア: ${j.score} / 100`, "──────────────────");
+
+  block("直すべき問題（影響の大きい順）", j.items.filter(i => i.s === "ng"));
+  block("改善の余地がある点", j.items.filter(i => i.s === "warn" && i.w > 0));
+
+  L.push("", "■ このページの実測値（判断の材料にしてください）", "");
+  L.push(`- HTMLに含まれる本文の長さ: ${a.bodyText.length.toLocaleString()}字`);
+  L.push(`- 本文中の数値表現: ${a.stats}箇所`);
+  L.push(`- 外部リンク: ${a.extLinks}本（うち一次情報・公的機関へのリンク: ${a.authLinks}本）`);
+  L.push(`- 構造化データ(JSON-LD)の型: ${a.ldTypes.length ? a.ldTypes.join(", ") : "なし"}`);
+  L.push(`- 使われている意味構造タグ: ${a.semantic.length ? a.semantic.join(", ") : "なし"}（div は ${a.divCount}個）`);
+  L.push(`- 見出しの数: ${a.heads}（うち要約の起点になる見出し: ${a.summaryHeads.length}）`);
+  L.push(`- 更新日時の機械可読な記述: ${a.hasDate ? "あり" : "なし"}`);
+  L.push(`- lang属性: ${a.lang || "なし"}`);
+  L.push(`- タイトル: ${a.title || "なし"}`);
+  L.push(`- meta description: ${a.desc ? "あり（" + a.desc.slice(0, 60) + "…）" : "なし"}`);
+  if(a.spa) L.push("- ※このページは本文をJavaScriptで描画しており、AIクローラーには空ページに見えています");
+
+  L.push("", "■ お願いしたいこと", "");
+  L.push("1. 上の問題のうち、HTMLの追加・修正で直せるものは、そのまま貼れるコードを書いてください");
+  L.push("2. 本文の内容に関わる指摘（数字が少ない・出典がない等）は、どこに何を書き足すべきかを具体的に提案してください");
+  L.push("3. 配点の大きい項目から優先してください");
+  L.push("4. 見た目やデザインは変えず、AIからの読み取りやすさだけを改善してください");
+
+  L.push("", "■ 私のサイトのHTML", "");
+  L.push("（ここに自分のページのHTMLを貼り付けてください。長い場合は <head> 部分と本文の冒頭だけでも構いません）");
+
+  return L.join("\n");
+}
+
 const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 function fail(m){ const e = $("err"); e.textContent = m; e.style.display = "block"; $("out").style.display = "none"; }
 function run(text, url){ try{ render(text, url); }catch(e){ fail(e.message || "解析に失敗しました。"); } }
@@ -551,6 +617,39 @@ $("shareCopy").onclick = async () => {
   try{ await navigator.clipboard.writeText(t); b.textContent = "コピーしました"; }
   catch(e){ window.prompt("コピーしてください", t); return; }
   setTimeout(() => b.textContent = "結果を文章でコピー", 1600);
+};
+
+$("aiCopy").onclick = async () => {
+  const t = aiPromptText();
+  if(!t){ fail("先に診断を実行してください。"); return; }
+  const b = $("aiCopy");
+  // 依頼文は数千字になるため、prompt() に落ちると実質コピーできない。
+  // クリップボードAPIが使えない環境（権限失効・非HTTPS）では選択済みtextareaを経由する。
+  let ok = false;
+  try{ await navigator.clipboard.writeText(t); ok = true; }catch(e){}
+  if(!ok){
+    const ta = document.createElement("textarea");
+    ta.value = t;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try{ ok = document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  if(ok){
+    $("aiFallback").style.display = "none";
+    b.textContent = "コピーしました。AIに貼り付けてください";
+    setTimeout(() => b.textContent = "AIへの依頼文をコピー", 2400);
+    return;
+  }
+  /* クリップボードが使えない環境（権限拒否・非セキュアコンテキスト・iOSの一部）でも
+     利用者が必ず取り出せる状態にする。「コピーできませんでした」で終わらせると手詰まりになる。 */
+  $("aiText").value = t;
+  $("aiFallback").style.display = "block";
+  $("aiText").focus();
+  $("aiText").select();
+  b.textContent = "下の枠からコピーしてください";
+  setTimeout(() => b.textContent = "AIへの依頼文をコピー", 3000);
 };
 
 /* ブックマークレット: 同一オリジンの4ファイルを集めてクリップボードへ */
