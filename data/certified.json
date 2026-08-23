@@ -2,19 +2,19 @@
   "standard": "AIV-1",
   "standardName": "AI可読 認証",
   "minScore": 80,
-  "updatedAt": "2026-08-16",
+  "updatedAt": "2026-08-23",
   "count": 2,
   "note": "個別のスコアは保存も公開もしていません。順位をつけることが目的ではないためです。",
   "certified": [
     {
       "origin": "https://kakakakakazu.github.io/ai-visible",
       "since": "2026-08-09",
-      "lastVerified": "2026-08-16"
+      "lastVerified": "2026-08-23"
     },
     {
       "origin": "https://kakakakakazu.github.io/mail-visible",
       "since": "2026-08-09",
-      "lastVerified": "2026-08-16"
+      "lastVerified": "2026-08-23"
     }
   ]
 }
