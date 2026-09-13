@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>日本の主要サイトのAI可読性 実測データ（2026-09-06時点）</title>
+<title>日本の主要サイトのAI可読性 実測データ（2026-09-13時点）</title>
 <meta name="description" content="日本の主要サイト24件を実測。AIクローラーの遮断率は16.7%、AI可読性スコアの中央値は74点、llms.txt の設置率は0%。毎週更新の独自調査データ。">
 <link rel="canonical" href="https://kakakakakazu.github.io/ai-visible/data.html">
 <meta property="og:title" content="日本の主要サイトのAI可読性 実測データ">
@@ -15,8 +15,8 @@
   "@type": "Dataset",
   "name": "日本の主要サイトのAI可読性 実測データ",
   "description": "日本の主要サイト24件を対象に、AIクローラーの遮断状況とAI可読性を機械的に測定した集計データ。個別のサイト名は公開しない。",
-  "temporalCoverage": "2026-09-06",
-  "dateModified": "2026-09-06",
+  "temporalCoverage": "2026-09-13",
+  "dateModified": "2026-09-13",
   "license": "https://opensource.org/licenses/MIT",
   "creator": {
     "@type": "Organization",
@@ -72,7 +72,7 @@
 <article>
 
   <h1>日本の主要サイトのAI可読性 実測データ</h1>
-  <p class="meta">最終更新 <time datetime="2026-09-06">2026-09-06</time>｜対象 24サイト｜毎週自動更新</p>
+  <p class="meta">最終更新 <time datetime="2026-09-13">2026-09-13</time>｜対象 24サイト｜毎週自動更新</p>
 
   <p class="lead">日本の主要サイト <strong>24件</strong> を機械的に測定したところ、
   <strong>16.7%</strong> が何らかのAIクローラーを robots.txt で遮断しており、
@@ -116,7 +116,7 @@
     <tbody>
       <tr><td>中央値</td><td class="n">74</td></tr>
       <tr><td>第1四分位（下位25%の境界）</td><td class="n">66</td></tr>
-      <tr><td>第3四分位（上位25%の境界）</td><td class="n">82</td></tr>
+      <tr><td>第3四分位（上位25%の境界）</td><td class="n">80</td></tr>
       <tr><td>最低</td><td class="n">19</td></tr>
       <tr><td>最高</td><td class="n">91</td></tr>
     </tbody>
@@ -136,8 +136,8 @@
       <tr><td>外部リンクが1本もない</td><td class="n">4.8%</td></tr>
     </tbody>
   </table>
-  <p class="note">1ページあたりの数値表現は中央値 5箇所、
-  HTMLに含まれる本文の長さは中央値 4,436字でした。</p>
+  <p class="note">1ページあたりの数値表現は中央値 4箇所、
+  HTMLに含まれる本文の長さは中央値 4,342字でした。</p>
 
   <h2>方法</h2>
   <p>各サイトのトップページ・<code>robots.txt</code>・<code>llms.txt</code>・<code>sitemap.xml</code> を取得し、
