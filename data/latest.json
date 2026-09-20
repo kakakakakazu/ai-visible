@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-09-13",
+  "observedAt": "2026-09-20",
   "nRobots": 24,
   "nFull": 21,
   "skipped": 0,
@@ -22,7 +22,7 @@
     "meta-externalagent": 12.5
   },
   "score": {
-    "median": 74,
+    "median": 76,
     "p25": 66,
     "p75": 80,
     "min": 19,
@@ -38,9 +38,9 @@
   "hasMachineReadableDate": 28.6,
   "poorSemantics": 28.6,
   "statsPerPage": {
-    "median": 4
+    "median": 5
   },
   "bodyLength": {
-    "median": 4342
+    "median": 4398
   }
 }
