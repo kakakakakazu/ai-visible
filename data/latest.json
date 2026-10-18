@@ -1,9 +1,9 @@
 {
-  "observedAt": "2026-10-11",
+  "observedAt": "2026-10-18",
   "nRobots": 24,
-  "nFull": 21,
+  "nFull": 20,
   "skipped": 0,
-  "failed": 3,
+  "failed": 4,
   "method": "robots.txt は全対象から、本文由来の項目は取得を許可されたサイトのみから集計",
   "blockedAny": 16.7,
   "blockedByBot": {
@@ -22,25 +22,25 @@
     "meta-externalagent": 12.5
   },
   "score": {
-    "median": 74,
-    "p25": 66,
-    "p75": 79,
+    "median": 69,
+    "p25": 64,
+    "p75": 78,
     "min": 19,
     "max": 91
   },
-  "invisibleToAI": 9.5,
-  "hasStructuredData": 38.1,
+  "invisibleToAI": 15,
+  "hasStructuredData": 40,
   "brokenStructuredData": 0,
   "hasLlmsTxt": 0,
-  "hasSitemap": 47.6,
-  "hasAuthoritativeLinks": 19,
-  "noExternalLinks": 4.8,
-  "hasMachineReadableDate": 28.6,
-  "poorSemantics": 28.6,
+  "hasSitemap": 50,
+  "hasAuthoritativeLinks": 15,
+  "noExternalLinks": 5,
+  "hasMachineReadableDate": 30,
+  "poorSemantics": 35,
   "statsPerPage": {
-    "median": 4
+    "median": 3
   },
   "bodyLength": {
-    "median": 4308
+    "median": 4207
   }
 }
