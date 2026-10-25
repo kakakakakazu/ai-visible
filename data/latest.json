@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-10-18",
+  "observedAt": "2026-10-25",
   "nRobots": 24,
   "nFull": 20,
   "skipped": 0,
@@ -24,7 +24,7 @@
   "score": {
     "median": 69,
     "p25": 64,
-    "p75": 78,
+    "p75": 79,
     "min": 19,
     "max": 91
   },
@@ -33,14 +33,14 @@
   "brokenStructuredData": 0,
   "hasLlmsTxt": 0,
   "hasSitemap": 50,
-  "hasAuthoritativeLinks": 15,
+  "hasAuthoritativeLinks": 20,
   "noExternalLinks": 5,
   "hasMachineReadableDate": 30,
   "poorSemantics": 35,
   "statsPerPage": {
-    "median": 3
+    "median": 4
   },
   "bodyLength": {
-    "median": 4207
+    "median": 4239
   }
 }
